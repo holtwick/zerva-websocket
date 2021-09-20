@@ -22,7 +22,7 @@ interface WebsocketActions {
   throwsError(): void
 }
 
-describe("Socket", () => {
+describe("module", () => {
   beforeAll(async () => {
     useHttp({ port })
     useWebSocket({})
@@ -110,13 +110,13 @@ describe("Socket", () => {
 
   it("should ping", async () => {
     const channel = new WebSocketConnection(url, {
-      messageReconnectTimeout: 500,
+      messageReconnectTimeout: 1200, // emits at 600
     })
-
-    const bridge = useMessages<WebsocketActions>({ channel })
+    useMessages<WebsocketActions>({ channel })
 
     await sleep(2000)
-
+    // 2000 / 600 = 3.333...
+    expect(channel.pingCount).toBe(3)
     channel.close()
   }, 5000)
 })

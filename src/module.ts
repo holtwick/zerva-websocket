@@ -39,6 +39,7 @@ export class WebsocketNodeConnection extends Channel {
     let interval: any
 
     if (pingInterval > 0) {
+      log.info("Ping interval", pingInterval)
       interval = setInterval(() => {
         if (this.isAlive === false) {
           log("terminate", ws)
