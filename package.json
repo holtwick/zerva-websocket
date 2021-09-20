@@ -9,7 +9,11 @@
   "keywords": [
     "server",
     "typescript",
-    "event"
+    "event",
+    "websocket",
+    "socket",
+    "zerva",
+    "zeed"
   ],
   "author": {
     "name": "Dirk Holtwick",
@@ -42,7 +46,7 @@
     "check": "tsc --noEmit -p tsconfig.json",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm test && npm run build",
-    "test": "jest src"
+    "test": "jest src --detectOpenHandles"
   },
   "dependencies": {
     "@types/node": "^16.9.2",

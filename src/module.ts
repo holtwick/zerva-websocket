@@ -13,21 +13,42 @@ import { webSocketPath } from "./types"
 const name = "zerva:websocket"
 const log = Logger(name)
 
-interface ZWebSocketConfig {}
+interface ZWebSocketConfig {
+  pingInterval?: number
+}
 
 export class WebsocketNodeConnection extends Channel {
   ws: WebSocket
-  isConnected = true
 
-  constructor(ws: WebSocket) {
+  isConnected: boolean = true
+  isAlive: boolean = true
+
+  constructor(ws: WebSocket, config: ZWebSocketConfig = {}) {
     super()
 
     this.ws = ws
-    this.ws.binaryType = "arraybuffer"
+
+    ws.binaryType = "arraybuffer"
 
     const id = uname("ws")
     const log = Logger(`${id}:${name}`)
     log.info("new connection", id)
+
+    const { pingInterval = 30000 } = config
+
+    let interval: any
+
+    if (pingInterval > 0) {
+      // interval = setInterval(() => {
+      //   if (this.isAlive === false) {
+      //     log("terminate", ws)
+      //     ws.close()
+      //     // return ws.terminate()
+      //   }
+      //   this.isAlive = false
+      //   ws.ping()
+      // }, pingInterval)
+    }
 
     ws.on("message", (data: ArrayBuffer, isBinary: boolean) => {
       try {
@@ -56,6 +77,7 @@ export class WebsocketNodeConnection extends Channel {
 
     ws.on("close", () => {
       log.info("onclose")
+      if (interval) clearInterval(interval)
       this.isConnected = false
       emit("webSocketDisconnect", {
         channel: this,
@@ -95,28 +117,15 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
     })
 
     wss.on("connection", (ws: any, req: any) => {
-      log.info("new connection")
+      log.info("onconnection")
       ws.isAlive = true
       ws.on("pong", () => (ws.isAlive = true))
-      new WebsocketNodeConnection(ws)
+      new WebsocketNodeConnection(ws, config)
     })
-
-    const interval = setInterval(() => {
-      wss.clients.forEach(function each(ws: any) {
-        if (ws.isAlive === false) {
-          log("terminate", ws)
-          return ws.terminate()
-        }
-        ws.isAlive = false
-        ws.ping()
-      })
-    }, 1000) // 30000)
-
-    wss.on("close", () => clearInterval(interval))
 
     http.on("upgrade", (request: any, socket: any, head: Buffer) => {
       const { pathname } = parse(request.url)
-      log("http upgrade")
+      log("onupgrade")
       if (pathname === webSocketPath) {
         wss.handleUpgrade(request, socket, head, (ws: any) => {
           log("upgrade connection")
