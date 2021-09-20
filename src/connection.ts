@@ -76,6 +76,7 @@ export class WebSocketConnection extends Channel {
     this.shouldConnect = false
     if (this.ws != null) {
       this.ws?.close()
+      this.ws = undefined
     }
   }
 
