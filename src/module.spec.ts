@@ -17,7 +17,7 @@ const log = Logger("test:module")
 const port = 8888
 const url = `ws://localhost:${port}${webSocketPath}`
 
-interface BridgeActions {
+interface WebsocketActions {
   echo(value: any): any
   throwsError(): void
 }
@@ -28,9 +28,9 @@ describe("Socket", () => {
     useWebSocket({})
 
     on("webSocketConnect", ({ channel }) => {
-      useMessages<BridgeActions>(
-        { channel },
-        {
+      useMessages<WebsocketActions>({
+        channel,
+        handlers: {
           echo(value) {
             log("echo", value)
             return value
@@ -38,8 +38,8 @@ describe("Socket", () => {
           throwsError() {
             throw new Error("fakeError")
           },
-        }
-      )
+        },
+      })
     })
 
     await serve()
@@ -58,7 +58,7 @@ describe("Socket", () => {
     // @ts-ignore
     const channel = new WebsocketChannel(socket)
 
-    const bridge = useMessages<BridgeActions>({ channel })
+    const bridge = useMessages<WebsocketActions>({ channel })
 
     socket.addEventListener("open", async (event) => {
       const id = uuid()
@@ -75,7 +75,7 @@ describe("Socket", () => {
     expect.assertions(1)
 
     const channel = await openWebSocketChannel(url)
-    const bridge = useMessages<BridgeActions>({ channel })
+    const bridge = useMessages<WebsocketActions>({ channel })
 
     const id = uuid()
     let result = await bridge.echo({ id })
@@ -90,7 +90,7 @@ describe("Socket", () => {
     expect.assertions(2)
 
     const channel = new WebSocketConnection(url)
-    const bridge = useMessages<BridgeActions>({ channel })
+    const bridge = useMessages<WebsocketActions>({ channel })
     // await sleep(500)
 
     const id = uuid()
@@ -113,7 +113,7 @@ describe("Socket", () => {
       messageReconnectTimeout: 500,
     })
 
-    const bridge = useMessages<BridgeActions>({ channel })
+    const bridge = useMessages<WebsocketActions>({ channel })
 
     await sleep(2000)
 
