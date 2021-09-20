@@ -18,34 +18,31 @@ export interface WebSocketConnectionOptions {
 }
 
 export class WebSocketConnection extends Channel {
-  ws?: WebSocket
-  url: string | URL
-  shouldConnect: boolean = true
-  isConnected: boolean = false
-  connecting: boolean = false
-  lastMessageReceived: number = 0
-  unsuccessfulReconnects: number = 0
-  _checkInterval: any
-  opt: WebSocketConnectionOptions
+  public ws?: WebSocket
+  public url: string | URL
+  public shouldConnect: boolean = true
+  public isConnected: boolean = false
+  public lastMessageReceived: number = 0
+  public unsuccessfulReconnects: number = 0
+  public pingCount: number = 0
+
+  private opt: WebSocketConnectionOptions
 
   constructor(url?: string, opt: WebSocketConnectionOptions = {}) {
     super()
     this.opt = opt
     this.url = url ?? getWebsocketUrlFromLocation()
 
-    const { messageReconnectTimeout = default_messageReconnectTimeout } =
-      this.opt
-
-    this._checkInterval = setInterval(() => {
-      if (
-        this.isConnected &&
-        messageReconnectTimeout < getTimestamp() - this.lastMessageReceived
-      ) {
-        // no message received in a long time - not even your own awareness
-        // updates (which are updated every 15 seconds)
-        this.ws?.close()
-      }
-    }, messageReconnectTimeout / 2)
+    // this._checkInterval = setInterval(() => {
+    //   if (
+    //     this.isConnected &&
+    //     messageReconnectTimeout < getTimestamp() - this.lastMessageReceived
+    //   ) {
+    //     // no message received in a long time - not even your own awareness
+    //     // updates (which are updated every 15 seconds)
+    //     this.ws?.close()
+    //   }
+    // }, messageReconnectTimeout / 2)
 
     if (isBrowser()) {
       window.addEventListener("beforeunload", () => this.disconnect())
@@ -67,7 +64,7 @@ export class WebSocketConnection extends Channel {
 
   close() {
     log("close")
-    clearInterval(this._checkInterval)
+    // clearInterval(this._checkInterval)
     this.disconnect()
   }
 
@@ -95,7 +92,7 @@ export class WebSocketConnection extends Channel {
       this.ws = websocket
       this.ws.binaryType = "arraybuffer"
 
-      this.connecting = true
+      // this.isConnecting = true
       this.isConnected = false
 
       websocket.addEventListener("message", (event: any) => {
@@ -103,27 +100,28 @@ export class WebSocketConnection extends Channel {
 
         this.lastMessageReceived = getTimestamp()
         const data = event.data as ArrayBuffer
+        clearTimeout(pingTimeout)
 
         if (equalBinary(data, pongMessage)) {
           log("-> pong")
-          clearTimeout(pingTimeout)
-          pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
+          this.pingCount++
+          if (messageReconnectTimeout > 0) {
+            pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
+          }
         } else {
           this.emit("message", { data })
         }
-
-        // this.emit("message", [message, wsclient])
       })
 
       const onclose = (error?: any) => {
         log("onclose", error)
+        clearTimeout(pingTimeout)
 
         if (this.ws != null) {
           this.ws = undefined
-          this.connecting = false
+          // this.isConnecting = false
           if (this.isConnected) {
             this.isConnected = false
-            // this.emit("disconnect", [{ type: "disconnect", error }, wsclient])
           } else {
             this.unsuccessfulReconnects++
           }
@@ -141,7 +139,6 @@ export class WebSocketConnection extends Channel {
             )
           )
         }
-        clearTimeout(pingTimeout)
       }
 
       const sendPing = () => {
@@ -155,14 +152,12 @@ export class WebSocketConnection extends Channel {
       websocket.addEventListener("error", (error: any) => onclose(error))
       websocket.addEventListener("open", () => {
         log("onopen")
-
         this.lastMessageReceived = getTimestamp()
-        this.connecting = false
         this.isConnected = true
         this.unsuccessfulReconnects = 0
-        // this.emit("connect", [{ type: "connect" }, wsclient])
-        // set ping
-        pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
+        if (messageReconnectTimeout > 0) {
+          pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
+        }
       })
     }
   }
