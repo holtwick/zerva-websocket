@@ -10,8 +10,8 @@ import { pingMessage, pongMessage } from "./types"
 import { parse } from "url"
 import { webSocketPath } from "./types"
 
-const name = "zerva:websocket"
-const log = Logger(name)
+const moduleName = "websocket"
+const log = Logger(moduleName)
 
 interface ZWebSocketConfig {
   pingInterval?: number
@@ -30,8 +30,8 @@ export class WebsocketNodeConnection extends Channel {
 
     ws.binaryType = "arraybuffer"
 
-    const id = uname("ws")
-    const log = Logger(`${id}:${name}`)
+    const id = uname(moduleName)
+    const log = Logger(`${id}:zerva-${moduleName}`)
     log.info("new connection", id)
 
     const { pingInterval = 30000 } = config
@@ -39,16 +39,20 @@ export class WebsocketNodeConnection extends Channel {
     let interval: any
 
     if (pingInterval > 0) {
-      // interval = setInterval(() => {
-      //   if (this.isAlive === false) {
-      //     log("terminate", ws)
-      //     ws.close()
-      //     // return ws.terminate()
-      //   }
-      //   this.isAlive = false
-      //   ws.ping()
-      // }, pingInterval)
+      interval = setInterval(() => {
+        if (this.isAlive === false) {
+          log("terminate", ws)
+          ws.close()
+          // return ws.terminate()
+        }
+        this.isAlive = false
+        ws.ping()
+      }, pingInterval)
     }
+
+    ws.on("pong", () => {
+      this.isAlive = true
+    })
 
     ws.on("message", (data: ArrayBuffer, isBinary: boolean) => {
       try {
@@ -99,7 +103,7 @@ export class WebsocketNodeConnection extends Channel {
 export function useWebSocket(config: ZWebSocketConfig = {}) {
   log("setup")
 
-  register(name)
+  register(moduleName)
 
   onInit(() => {
     requireModules("http")
@@ -119,7 +123,6 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
     wss.on("connection", (ws: any, req: any) => {
       log.info("onconnection")
       ws.isAlive = true
-      ws.on("pong", () => (ws.isAlive = true))
       new WebsocketNodeConnection(ws, config)
     })
 
