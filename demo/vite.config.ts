@@ -9,20 +9,20 @@ import { useWebSocket } from "zerva-websocket"
 import "./src/protocol"
 import { Messages } from "./src/protocol"
 
-const log = Logger("demo")
+// const log = Logger("demo")
 
 const zervaSetup = async () => {
   useWebSocket()
 
   on("webSocketConnect", ({ channel }) => {
-    const msg = useMessages<Messages>(
-      { channel },
-      {
+    useMessages<Messages>({
+      channel,
+      handlers: {
         viteEcho(data) {
           return data
         },
-      }
-    )
+      },
+    })
 
     // channel.on("message")
     // conn.on("viteEcho", (data: any) => data)

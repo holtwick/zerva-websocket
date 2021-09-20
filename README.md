@@ -31,8 +31,8 @@ Then implement them in on the server side:
 ```ts
 on("webSocketConnect", ({ channel }) => {
   useMessage<Messages>(
-    { channel },
-    {
+    channel,
+    handlers: {
       echo(message) {
         return message
       },

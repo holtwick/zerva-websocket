@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "vue": "^3.2.12",
-    "zeed": "^0.7.5",
-    "zerva": "^0.4.28",
+    "zeed": "^0.7.7",
+    "zerva": "^0.4.29",
     "zerva-vite-plugin": "^0.4.3",
     "zerva-websocket": "link:.."
   },
