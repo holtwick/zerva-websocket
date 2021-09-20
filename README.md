@@ -22,7 +22,7 @@ You should use the message overlay from `zeed` to have a convenient messaging in
 
 ```ts
 interface Messages {
-  echo(msg:string):string
+  echo(msg: string): string
 }
 ```
 
