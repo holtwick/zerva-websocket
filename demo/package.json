@@ -1,7 +1,6 @@
 {
-  "name": "zerva-vite-plugin-demo",
+  "name": "zerva-websocket-demo",
   "version": "0.2.2",
-  "description": "🌱 Zerva vite plugin demo",
   "type": "module",
   "engines": {
     "node": ">=14.13.1"
