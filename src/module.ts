@@ -18,7 +18,8 @@ interface ZWebSocketConfig {
 }
 
 export class WebsocketNodeConnection extends Channel {
-  ws: WebSocket
+  private ws: WebSocket
+  private interval: any
 
   isConnected: boolean = true
   isAlive: boolean = true
@@ -36,11 +37,9 @@ export class WebsocketNodeConnection extends Channel {
 
     const { pingInterval = 30000 } = config
 
-    let interval: any
-
     if (pingInterval > 0) {
       log.info("Ping interval", pingInterval)
-      interval = setInterval(() => {
+      this.interval = setInterval(() => {
         if (this.isAlive === false) {
           log("terminate", ws)
           ws.close()
@@ -57,7 +56,7 @@ export class WebsocketNodeConnection extends Channel {
 
     ws.on("message", (data: ArrayBuffer, isBinary: boolean) => {
       try {
-        log("onmessage", typeof data, new Uint8Array(data), isBinary)
+        log("onmessage", typeof data) // , new Uint8Array(data), isBinary)
         if (equalBinary(data, pingMessage)) {
           log("-> ping -> pong")
           ws.send(pongMessage)
@@ -82,7 +81,10 @@ export class WebsocketNodeConnection extends Channel {
 
     ws.on("close", () => {
       log.info("onclose")
-      if (interval) clearInterval(interval)
+      if (this.interval) {
+        clearInterval(this.interval)
+        this.interval = undefined
+      }
       this.isConnected = false
       emit("webSocketDisconnect", {
         channel: this,
@@ -97,7 +99,15 @@ export class WebsocketNodeConnection extends Channel {
   }
 
   close() {
+    if (this.interval) {
+      clearInterval(this.interval)
+      this.interval = undefined
+    }
     this.ws.close()
+  }
+
+  dispose() {
+    this.close()
   }
 }
 

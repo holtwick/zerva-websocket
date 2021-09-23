@@ -1,3 +1,4 @@
+import { disconnect } from "process"
 import { Channel, getTimestamp, isBrowser, Logger } from "zeed"
 import { equalBinary } from "./bin"
 import { pingMessage, pongMessage } from "./types"
@@ -27,22 +28,13 @@ export class WebSocketConnection extends Channel {
   public pingCount: number = 0
 
   private opt: WebSocketConnectionOptions
+  private reconnectTimout: any
+  private pingTimeout: any
 
   constructor(url?: string, opt: WebSocketConnectionOptions = {}) {
     super()
     this.opt = opt
     this.url = url ?? getWebsocketUrlFromLocation()
-
-    // this._checkInterval = setInterval(() => {
-    //   if (
-    //     this.isConnected &&
-    //     messageReconnectTimeout < getTimestamp() - this.lastMessageReceived
-    //   ) {
-    //     // no message received in a long time - not even your own awareness
-    //     // updates (which are updated every 15 seconds)
-    //     this.ws?.close()
-    //   }
-    // }, messageReconnectTimeout / 2)
 
     if (isBrowser()) {
       window.addEventListener("beforeunload", () => this.disconnect())
@@ -62,19 +54,23 @@ export class WebSocketConnection extends Channel {
     }
   }
 
-  close() {
-    log("close")
-    // clearInterval(this._checkInterval)
-    this.disconnect()
-  }
-
   disconnect() {
     log("disconnect")
+    clearTimeout(this.pingTimeout)
+    clearTimeout(this.reconnectTimout)
     this.shouldConnect = false
     if (this.ws != null) {
       this.ws?.close()
       this.ws = undefined
     }
+  }
+
+  dispose() {
+    this.disconnect()
+  }
+
+  close() {
+    this.disconnect()
   }
 
   _connect() {
@@ -86,7 +82,6 @@ export class WebSocketConnection extends Channel {
 
     if (this.shouldConnect && this.ws == null) {
       log("_connect", this.url, this.unsuccessfulReconnects)
-      let pingTimeout: any
 
       const websocket = new WebSocket(this.url)
       this.ws = websocket
@@ -96,17 +91,17 @@ export class WebSocketConnection extends Channel {
       this.isConnected = false
 
       websocket.addEventListener("message", (event: any) => {
-        log("onmessage", event)
+        log("onmessage", typeof event)
 
         this.lastMessageReceived = getTimestamp()
         const data = event.data as ArrayBuffer
-        clearTimeout(pingTimeout)
+        clearTimeout(this.pingTimeout)
 
         if (equalBinary(data, pongMessage)) {
           log("-> pong")
           this.pingCount++
           if (messageReconnectTimeout > 0) {
-            pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
+            this.pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
           }
         } else {
           this.emit("message", { data })
@@ -115,7 +110,7 @@ export class WebSocketConnection extends Channel {
 
       const onclose = (error?: any) => {
         log("onclose", error)
-        clearTimeout(pingTimeout)
+        clearTimeout(this.pingTimeout)
 
         if (this.ws != null) {
           this.ws = undefined
@@ -130,7 +125,7 @@ export class WebSocketConnection extends Channel {
           // log10(wsUnsuccessfulReconnects).
           // The idea is to increase reconnect timeout slowly and have no reconnect
           // timeout at the beginning (log(1) = 0)
-          setTimeout(
+          this.reconnectTimout = setTimeout(
             () => this._connect(),
             Math.min(
               Math.log10(this.unsuccessfulReconnects + 1) *
@@ -156,7 +151,7 @@ export class WebSocketConnection extends Channel {
         this.isConnected = true
         this.unsuccessfulReconnects = 0
         if (messageReconnectTimeout > 0) {
-          pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
+          this.pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
         }
       })
     }
