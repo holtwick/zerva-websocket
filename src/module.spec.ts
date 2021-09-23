@@ -1,7 +1,7 @@
 // (C)opyright 2021-07-15 Dirk Holtwick, holtwick.it. All rights reserved.
 
 import WebSocket from "ws"
-import { Logger, sleep, useMessages, uuid } from "zeed"
+import { Logger, sleep, useMessageHub, useMessages, uuid } from "zeed"
 import { emit, on, serve, useHttp } from "zerva"
 import { openWebSocketChannel, WebsocketChannel } from "./channel"
 import { WebSocketConnection } from "./connection"
@@ -28,16 +28,15 @@ describe("module", () => {
     useWebSocket({})
 
     on("webSocketConnect", ({ channel }) => {
-      useMessages<WebsocketActions>({
+      useMessageHub({
         channel,
-        handlers: {
-          echo(value) {
-            log("echo", value)
-            return value
-          },
-          throwsError() {
-            throw new Error("fakeError")
-          },
+      }).listen<WebsocketActions>({
+        echo(value) {
+          log("echo", value)
+          return value
+        },
+        throwsError() {
+          throw new Error("fakeError")
         },
       })
     })
@@ -112,7 +111,7 @@ describe("module", () => {
     const channel = new WebSocketConnection(url, {
       messageReconnectTimeout: 1200, // emits at 600
     })
-    useMessages<WebsocketActions>({ channel })
+    // useMessages<WebsocketActions>({ channel })
 
     await sleep(2000)
     // 2000 / 600 = 3.333...
