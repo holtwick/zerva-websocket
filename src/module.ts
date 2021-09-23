@@ -1,14 +1,10 @@
 // (C)opyright 2021 Dirk Holtwick, holtwick.it. All rights reserved.
 
-// @ts-ignore
-import WebSocket, { WebSocketServer } from "ws"
-
-import { Channel, Logger, uname } from "zeed"
-import { emit, on, onInit, register, requireModules } from "zerva"
-import { equalBinary } from "./bin"
-import { pingMessage, pongMessage } from "./types"
 import { parse } from "url"
-import { webSocketPath } from "./types"
+import WebSocket from "ws"
+import { Channel, equalBinary, Logger, uname } from "zeed"
+import { emit, on, onInit, register, requireModules } from "zerva"
+import { pingMessage, pongMessage, webSocketPath } from "./types"
 
 const moduleName = "websocket"
 const log = Logger(moduleName)
@@ -126,7 +122,7 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
     // https://github.com/websockets/ws
     // https://cheatcode.co/tutorials/how-to-set-up-a-websocket-server-with-node-js-and-express
 
-    const wss = new WebSocketServer({
+    const wss = new WebSocket.Server({
       noServer: true,
       path: webSocketPath,
     })

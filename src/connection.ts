@@ -1,6 +1,4 @@
-import { disconnect } from "process"
-import { Channel, getTimestamp, isBrowser, Logger } from "zeed"
-import { equalBinary } from "./bin"
+import { Channel, equalBinary, getTimestamp, isBrowser, Logger } from "zeed"
 import { pingMessage, pongMessage } from "./types"
 import { getWebsocketUrlFromLocation } from "./url"
 
