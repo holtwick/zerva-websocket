@@ -30,14 +30,11 @@ Then implement them in on the server side:
 
 ```ts
 on("webSocketConnect", ({ channel }) => {
-  useMessage<Messages>(
-    channel,
-    handlers: {
-      echo(message) {
-        return message
-      },
-    }
-  )
+  useMessageHub({ channel }).listen<Messages>({
+    echo(message) {
+      return message
+    },
+  })
 })
 ```
 
@@ -45,8 +42,8 @@ On the client side you may connect easily and call the messages:
 
 ```ts
 const channel = new WebSocketConnection()
-const msg = useMessages<Messages>({ channel })
+const send = useMessageHub({ channel }.send<Messages>()
 
-let response = await msg.echo("Hello World")
+let response = await send.echo("Hello World")
 expect(response).toBe("Hello World")
 ```
