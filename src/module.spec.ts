@@ -1,7 +1,7 @@
 // (C)opyright 2021-07-15 Dirk Holtwick, holtwick.it. All rights reserved.
 
 import WebSocket from "ws"
-import { Logger, sleep, useMessages, uuid } from "zeed"
+import { Logger, sleep, useMessageHub, uuid } from "zeed"
 import { emit, on, serve, useHttp } from "zerva"
 import { openWebSocketChannel, WebsocketChannel } from "./channel"
 import { WebSocketConnection } from "./connection"
@@ -26,18 +26,16 @@ describe("module", () => {
   beforeAll(async () => {
     useHttp({ port })
     useWebSocket({})
-
     on("webSocketConnect", ({ channel }) => {
-      useMessages<WebsocketActions>({
+      useMessageHub({
         channel,
-        handlers: {
-          echo(value) {
-            log("echo", value)
-            return value
-          },
-          throwsError() {
-            throw new Error("fakeError")
-          },
+      }).listen<WebsocketActions>({
+        echo(value) {
+          log("echo", value)
+          return value
+        },
+        throwsError() {
+          throw new Error("fakeError")
         },
       })
     })
@@ -58,7 +56,7 @@ describe("module", () => {
     // @ts-ignore
     const channel = new WebsocketChannel(socket)
 
-    const bridge = useMessages<WebsocketActions>({ channel })
+    const bridge = useMessageHub({ channel }).send<WebsocketActions>()
 
     socket.addEventListener("open", async (event) => {
       const id = uuid()
@@ -75,7 +73,7 @@ describe("module", () => {
     expect.assertions(1)
 
     const channel = await openWebSocketChannel(url)
-    const bridge = useMessages<WebsocketActions>({ channel })
+    const bridge = useMessageHub({ channel }).send<WebsocketActions>()
 
     const id = uuid()
     let result = await bridge.echo({ id })
@@ -90,7 +88,7 @@ describe("module", () => {
     expect.assertions(2)
 
     const channel = new WebSocketConnection(url)
-    const bridge = useMessages<WebsocketActions>({ channel })
+    const bridge = useMessageHub({ channel }).send<WebsocketActions>()
     // await sleep(500)
 
     const id = uuid()
@@ -112,8 +110,7 @@ describe("module", () => {
     const channel = new WebSocketConnection(url, {
       messageReconnectTimeout: 1200, // emits at 600
     })
-    useMessages<WebsocketActions>({ channel })
-
+    useMessageHub({ channel }).send<WebsocketActions>()
     await sleep(2000)
     // 2000 / 600 = 3.333...
     expect(channel.pingCount).toBe(3)
