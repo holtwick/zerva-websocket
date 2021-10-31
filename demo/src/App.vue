@@ -8,15 +8,15 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue"
-import { Logger, uuid, useMessageHub } from "zeed"
+import { Logger, useMessageHub } from "zeed"
 import { WebSocketConnection } from "zerva-websocket"
-import "./protocol"
+import { Messages } from "./protocol"
 
 const log = Logger("app")
 log("app")
 
 const channel = new WebSocketConnection()
-const msg = useMessageHub<Messages>({ channel })
+const msg = useMessageHub({ channel }).send<Messages>()
 
 export default defineComponent({
   setup() {
