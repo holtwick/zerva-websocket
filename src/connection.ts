@@ -44,7 +44,7 @@ export class WebSocketConnection extends Channel {
   }
 
   postMessage(data: any): void {
-    log("postMessage", data)
+    // log("postMessage", data)
     if (this.ws) {
       this.ws.send(data)
     } else {
