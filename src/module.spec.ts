@@ -1,13 +1,32 @@
 // (C)opyright 2021-07-15 Dirk Holtwick, holtwick.it. All rights reserved.
 
 import WebSocket from "ws"
-import { Logger, sleep, useMessageHub, uuid } from "zeed"
+import {
+  Logger,
+  LoggerNodeHandler,
+  LogLevel,
+  sleep,
+  useMessageHub,
+  uuid,
+} from "zeed"
 import { emit, on, serve, useHttp } from "zerva"
 import { openWebSocketChannel, WebsocketChannel } from "./channel"
 import { WebSocketConnection } from "./connection"
-import "./logging"
 import { useWebSocket } from "./module"
 import { webSocketPath } from "./types"
+
+Logger.setHandlers([
+  LoggerNodeHandler({
+    level: LogLevel.debug,
+    filter: "*",
+    colors: true,
+    fill: 32,
+    nameBrackets: false,
+    levelHelper: false,
+  }),
+])
+
+Logger.setLock(true)
 
 // @ts-ignore
 global.WebSocket = WebSocket

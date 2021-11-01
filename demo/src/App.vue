@@ -1,25 +1,43 @@
 <template>
   <div>
     <h1>zerva-websocket demo</h1>
-    <p>Response of viteEcho request: <pre>{{ directFeedback }}</pre></p>
-    <p>Pushed viteEcho: <pre>{{ pushedFeedback }}</pre></p>
+    <pre>{{ directFeedback }}</pre>
+    <pre>{{ pushedFeedback }}</pre>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue"
-import { Logger, useMessageHub } from "zeed"
+import { Logger } from "zeed"
 import { WebSocketConnection } from "zerva-websocket"
-import { Messages } from "./protocol"
 
 const log = Logger("app")
 log("app")
 
-const channel = new WebSocketConnection()
-const msg = useMessageHub({ channel }).send<Messages>()
-
 let directFeedback = ref({})
 let pushedFeedback = ref({})
+
+let counter = 0
+
+const channel = new WebSocketConnection()
+
+channel.on("message", (msg) => {
+  pushedFeedback.value = msg.data
+  log("message", JSON.parse(msg.data))
+})
+
+channel.on("connect", () => {
+  log("channel connect")
+
+  counter++
+  channel.postMessage(
+    JSON.stringify({
+      from: "client",
+      hello: "world",
+      counter,
+    })
+  )
+})
 
 // conn.on("serverPong", (data) => log("serverPong", data))
 
@@ -28,16 +46,17 @@ let pushedFeedback = ref({})
 //   pong.value = r
 // })
 
-useMessageHub({ channel }).listen<Messages>({
-  viteEcho(data) {
-    log("received", data)
-    pushedFeedback.value = data 
-    return data
-  },
-})
+//   const msg = useMessageHub({ channel }).send<Messages>()
+// useMessageHub({ channel }).listen<Messages>({
+//   viteEcho(data) {
+//     log("received", data)
+//     pushedFeedback.value = data
+//     return data
+//   },
+// })
 
-msg.viteEcho({ hello: "world at " + new Date() }).then((data: any) => {
-  log("viteEcho direct", data)
-  directFeedback.value = data
-})
+// msg.viteEcho({ hello: "world at " + new Date() }).then((data: any) => {
+//   log("viteEcho direct", data)
+//   directFeedback.value = data
+// })
 </script>

@@ -1,8 +1,9 @@
-import { useMessageHub } from "zeed"
+import { Logger } from "zeed"
 import { on, serve, useHttp } from "zerva"
 import { useVite } from "zerva-vite"
 import { useWebSocket } from "zerva-websocket"
-import { Messages } from "./src/protocol"
+
+const log = Logger("service")
 
 useHttp({ port: 8080 })
 
@@ -13,18 +14,33 @@ useVite({ root: "." })
 let counter = 0
 
 on("webSocketConnect", ({ channel }) => {
-  useMessageHub({
-    channel,
-  }).listen<Messages>({
-    viteEcho(data) {
-      ++counter
-      return data
-      // {
-      //   // ...data,
-      //   responseCounter: counter,
-      // }
-    },
+  log.info("connected")
+
+  channel.on("message", (msg) => {
+    log.info("message", JSON.parse(msg.data))
   })
+
+  counter++
+  channel.postMessage(
+    JSON.stringify({
+      from: "server",
+      hello: "world",
+      counter,
+    })
+  )
+
+  // useMessageHub({
+  //   channel,
+  // }).listen<Messages>({
+  //   viteEcho(data) {
+  //     ++counter
+  //     return data
+  //     // {
+  //     //   // ...data,
+  //     //   responseCounter: counter,
+  //     // }
+  //   },
+  // })
 
   // const msg = useMessageHub({
   //   channel,

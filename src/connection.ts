@@ -152,6 +152,7 @@ export class WebSocketConnection extends Channel {
         if (messageReconnectTimeout > 0) {
           this.pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
         }
+        this.emit("connect")
       })
     }
   }
