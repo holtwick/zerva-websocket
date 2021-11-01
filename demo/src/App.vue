@@ -33,11 +33,20 @@ channel.on("connect", () => {
   channel.postMessage(
     JSON.stringify({
       from: "client",
-      hello: "world",
       counter,
     })
   )
 })
+
+setInterval(() => {
+  counter++
+  channel.postMessage(
+    JSON.stringify({
+      from: "clientPing",
+      counter,
+    })
+  )
+}, 5000)
 
 // conn.on("serverPong", (data) => log("serverPong", data))
 

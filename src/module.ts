@@ -69,6 +69,7 @@ export class WebsocketNodeConnection extends Channel {
     ws.on("error", (error) => {
       log.error("onerror", error)
       this.isConnected = false
+      this.emit("close")
       emit("webSocketDisconnect", {
         channel: this,
         error,
@@ -82,6 +83,7 @@ export class WebsocketNodeConnection extends Channel {
         this.interval = undefined
       }
       this.isConnected = false
+      this.emit("close")
       emit("webSocketDisconnect", {
         channel: this,
       })

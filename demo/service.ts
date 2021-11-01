@@ -1,4 +1,4 @@
-import { Logger } from "zeed"
+import { Logger, useInterval } from "zeed"
 import { on, serve, useHttp } from "zerva"
 import { useVite } from "zerva-vite"
 import { useWebSocket } from "zerva-websocket"
@@ -28,6 +28,18 @@ on("webSocketConnect", ({ channel }) => {
       counter,
     })
   )
+
+  let dispose = useInterval(() => {
+    counter++
+    channel.postMessage(
+      JSON.stringify({
+        from: "serverPing",
+        counter,
+      })
+    )
+  }, 5000)
+
+  channel.on("close", dispose)
 
   // useMessageHub({
   //   channel,
