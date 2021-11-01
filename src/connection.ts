@@ -17,6 +17,7 @@ export interface WebSocketConnectionOptions {
 }
 
 export class WebSocketConnection extends Channel {
+  // implements Disposable
   public ws?: WebSocket
   public url: string | URL
   public shouldConnect: boolean = true

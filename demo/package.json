@@ -14,10 +14,10 @@
     "cross-fetch": "^3.1.4",
     "vue": "^3.2.20",
     "zeed": "^0.7.55",
-    "zerva": "^0.4.50",
+    "zerva": "^0.4.53",
     "zerva-vite": "^0.2.4",
     "zerva-vite-plugin": "^0.4.5",
-    "zerva-websocket": "link:.."
+    "zerva-websocket": "file:.."
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",

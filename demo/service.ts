@@ -1,27 +1,45 @@
 import { useMessageHub } from "zeed"
 import { on, serve, useHttp } from "zerva"
-import { useWebSocket } from "zerva-websocket"
-import "./src/protocol"
-import { Messages } from "./src/protocol"
 import { useVite } from "zerva-vite"
+import { useWebSocket } from "zerva-websocket"
+import { Messages } from "./src/protocol"
 
 useHttp({ port: 8080 })
 
+useWebSocket()
+
 useVite({ root: "." })
 
-useWebSocket()
+let counter = 0
 
 on("webSocketConnect", ({ channel }) => {
   useMessageHub({
     channel,
   }).listen<Messages>({
     viteEcho(data) {
+      ++counter
       return data
+      // {
+      //   // ...data,
+      //   responseCounter: counter,
+      // }
     },
   })
+
+  // const msg = useMessageHub({
+  //   channel,
+  // }).send<Messages>()
+
+  // ++counter
+  // msg.viteEcho({ pushCounter: counter })
+
   // channel.on("message")
   // conn.on("viteEcho", (data: any) => data)
 })
+
+// setTimeout(() => {
+//   connect.emit('')
+// }, 2000)
 
 on("httpInit", ({ get, addStatic }) => {
   get("/zerva", `Hello, this is Zerva!`)

@@ -135,15 +135,15 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
 
     http.on("upgrade", (request: any, socket: any, head: Buffer) => {
       const { pathname } = parse(request.url)
-      log("onupgrade")
       if (pathname === webSocketPath) {
+        log("onupgrade")
         wss.handleUpgrade(request, socket, head, (ws: any) => {
           log("upgrade connection")
           wss.emit("connection", ws, request)
         })
-      } else {
-        log("ignore upgrade")
-        // socket.destroy()
+        // } else {
+        //   log("ignore upgrade") // this can be vite HMR e.g.
+        //   // socket.destroy()
       }
     })
   })
