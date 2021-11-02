@@ -23,6 +23,7 @@ on("webSocketConnect", ({ channel }) => {
       log.info("message", JSON.parse(msg.data))
     })
 
+    return
     counter++
     channel.postMessage(
       JSON.stringify({

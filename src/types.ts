@@ -10,6 +10,11 @@ export const webSocketPath = "/zerva-websocket"
 export const pingMessage = new Uint8Array([0x9])
 export const pongMessage = new Uint8Array([0xa])
 
+export const wsReadyStateConnecting = 0
+export const wsReadyStateOpen = 1
+export const wsReadyStateClosing = 2 // eslint-disable-line
+export const wsReadyStateClosed = 3 // eslint-disable-line
+
 declare global {
   interface ZContextEvents {
     webSocketConnect(info: { channel: Channel }): void
