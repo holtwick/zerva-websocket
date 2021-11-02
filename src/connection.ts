@@ -32,6 +32,8 @@ export interface WebSocketConnectionOptions {
   messageReconnectTimeout?: number
 }
 
+const PERFORM_RETRY = true
+
 export class WebSocketConnection extends Channel implements Disposable {
   public ws?: WebSocket
   public url: string | URL
@@ -120,15 +122,16 @@ export class WebSocketConnection extends Channel implements Disposable {
     } = this.opt
 
     if (this.shouldConnect && this.ws == null) {
-      log("_connect", this.url, this.unsuccessfulReconnects)
+      log("=> connect", this.url, this.unsuccessfulReconnects)
 
-      const websocket = new WebSocket(this.url)
-      this.ws = websocket
+      const ws = new WebSocket(this.url)
+
+      this.ws = ws
       this.ws.binaryType = "arraybuffer"
 
       this.isConnected = false
 
-      websocket.addEventListener("message", (event: any) => {
+      ws.addEventListener("message", (event: any) => {
         log("onmessage", typeof event)
 
         this.lastMessageReceived = getTimestamp()
@@ -153,10 +156,11 @@ export class WebSocketConnection extends Channel implements Disposable {
         clearTimeout(this.pingTimeout)
 
         if (this.ws != null) {
-          if (error) log.warn(`onclose with error=${String(error)}`)
+          this.ws = undefined
+
+          if (error) log.warn(`onclose with error`)
           else log("onclose")
 
-          this.ws = undefined
           if (this.isConnected) {
             this.isConnected = false
             this.emit("disconnect")
@@ -164,37 +168,44 @@ export class WebSocketConnection extends Channel implements Disposable {
             this.unsuccessfulReconnects++
           }
 
-          // Start with no reconnect timeout and increase timeout by
-          // log10(wsUnsuccessfulReconnects).
-          // The idea is to increase reconnect timeout slowly and have no reconnect
-          // timeout at the beginning (log(1) = 0)
-          const reconnectDelay = Math.min(
-            Math.log10(this.unsuccessfulReconnects + 1) * reconnectTimeoutBase,
-            maxReconnectTimeout
-          )
-          this.reconnectTimout = setTimeout(
-            () => this._connect(),
-            reconnectDelay
-          )
-          log(`reconnect retry in ${reconnectDelay}ms`)
+          if (PERFORM_RETRY) {
+            // Start with no reconnect timeout and increase timeout by
+            // log10(wsUnsuccessfulReconnects).
+            // The idea is to increase reconnect timeout slowly and have no reconnect
+            // timeout at the beginning (log(1) = 0)
+            const reconnectDelay = Math.min(
+              Math.log10(this.unsuccessfulReconnects + 1) *
+                reconnectTimeoutBase,
+              maxReconnectTimeout
+            )
+            this.reconnectTimout = setTimeout(
+              () => this._connect(),
+              reconnectDelay
+            )
+            log(`reconnect retry in ${reconnectDelay}ms`)
+          } else {
+            log.warn("no retry, only one!")
+          }
         }
       }
 
-      websocket.addEventListener("close", () => onclose())
-      websocket.addEventListener("error", (error: any) => onclose(error))
-      websocket.addEventListener("open", () => {
+      ws.addEventListener("close", () => onclose())
+      ws.addEventListener("error", (error: any) => onclose(error))
+      ws.addEventListener("open", () => {
         log("onopen")
-        this.lastMessageReceived = getTimestamp()
-        this.isConnected = true
-        this.unsuccessfulReconnects = 0
-        if (messageReconnectTimeout > 0) {
-          log(`schedule next ping in ${messageReconnectTimeout / 2}ms`)
-          this.pingTimeout = setTimeout(
-            () => this.ping(),
-            messageReconnectTimeout / 2
-          )
+        if (this.ws === ws) {
+          this.lastMessageReceived = getTimestamp()
+          this.isConnected = true
+          this.unsuccessfulReconnects = 0
+          if (messageReconnectTimeout > 0) {
+            log(`schedule next ping in ${messageReconnectTimeout / 2}ms`)
+            this.pingTimeout = setTimeout(
+              () => this.ping(),
+              messageReconnectTimeout / 2
+            )
+          }
+          this.emit("connect")
         }
-        this.emit("connect")
       })
     }
   }
