@@ -138,13 +138,13 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
   })
 
   on("httpInit", ({ http }) => {
-    log("init")
+    let path = config.path ?? webSocketPath
+    if (!path.startsWith("/")) path = `/${path}`
+
+    log(`init path=${path}`)
 
     // https://github.com/websockets/ws
     // https://cheatcode.co/tutorials/how-to-set-up-a-websocket-server-with-node-js-and-express
-
-    let path = config.path ?? webSocketPath
-    if (!path.startsWith("/")) path = `/${path}`
 
     const wss = new WebSocketServer({
       noServer: true,
