@@ -1,41 +1,77 @@
 <template>
-  <div>Hello Vite, pong via socket.io => {{ pong }}</div>
   <div>
-    <iframe src="/zerva"></iframe>
-    <iframe src="/data.json"></iframe>
+    <h1>zerva-websocket demo</h1>
+    <pre>directFeedback = {{ directFeedback }}</pre>
+    <pre>pushedFeedback = {{ pushedFeedback }}</pre>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue"
-import { Logger, uuid, useMessages } from "zeed"
+<script setup lang="ts">
+import { ref } from "vue"
+import { Logger, useMessageHub } from "zeed"
 import { WebSocketConnection } from "zerva-websocket"
-import "./protocol"
+import { Messages } from "./protocol"
 
 const log = Logger("app")
 log("app")
 
+let directFeedback = ref({})
+let pushedFeedback = ref({})
+
+let counter = 0
+
 const channel = new WebSocketConnection()
-const msg = useMessages<Messages>({ channel })
 
-export default defineComponent({
-  setup() {
-    let pong = ref("")
+if (true) {
+  channel.on("message", (msg) => {
+    pushedFeedback.value = msg.data
+    log("message", JSON.parse(msg.data))
+  })
 
-    // conn.on("serverPong", (data) => log("serverPong", data))
+  channel.on("connect", () => {
+    log("channel connect")
 
-    // conn.emit("serverPing", { echo: uuid() }).then((r: any) => {
-    //   log("pong", r)
-    //   pong.value = r
-    // })
+    counter++
+    channel.postMessage(
+      JSON.stringify({
+        from: "client",
+        counter,
+      })
+    )
+  })
 
-    msg
-      .viteEcho({ hello: "world" })
-      .then((data) => log("viteEcho direct", data))
+  setInterval(() => {
+    counter++
+    channel.postMessage(
+      JSON.stringify({
+        from: "clientPing",
+        counter,
+      })
+    )
+  }, 5000)
+} else {
+  // conn.on("serverPong", (data) => log("serverPong", data))
 
-    return {
-      pong,
-    }
-  },
-})
+  // conn.emit("serverPing", { echo: uuid() }).then((r: any) => {
+  //   log("pong", r)
+  //   pong.value = r
+  // })
+
+  // useMessageHub({ channel }).listen<Messages>({
+  //   viteEcho(data) {
+  //     log("received", data)
+  //     pushedFeedback.value = data
+  //     return data
+  //   },
+  // })
+
+  const msg = useMessageHub({ channel }).send<Messages>()
+  channel.on("connect", () => {
+    ++counter
+    msg.viteEcho({ fromClient: counter }).then((data: any) => {
+      log("viteEcho direct", data)
+      directFeedback.value = data
+    })
+  })
+}
 </script>

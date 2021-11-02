@@ -2,7 +2,7 @@ import { Channel, equalBinary, getTimestamp, isBrowser, Logger } from "zeed"
 import { pingMessage, pongMessage } from "./types"
 import { getWebsocketUrlFromLocation } from "./url"
 
-const log = Logger("websocket")
+const log = Logger("connection")
 
 // See lib0 and y-websocket for initial implementation
 
@@ -17,6 +17,7 @@ export interface WebSocketConnectionOptions {
 }
 
 export class WebSocketConnection extends Channel {
+  // implements Disposable
   public ws?: WebSocket
   public url: string | URL
   public shouldConnect: boolean = true
@@ -44,7 +45,7 @@ export class WebSocketConnection extends Channel {
   }
 
   postMessage(data: any): void {
-    log("postMessage", data)
+    // log("postMessage", data)
     if (this.ws) {
       this.ws.send(data)
     } else {
@@ -151,6 +152,7 @@ export class WebSocketConnection extends Channel {
         if (messageReconnectTimeout > 0) {
           this.pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
         }
+        this.emit("connect")
       })
     }
   }

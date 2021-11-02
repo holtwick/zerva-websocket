@@ -1,7 +1,7 @@
 // (C)opyright 2021 Dirk Holtwick, holtwick.it. All rights reserved.
 
 import { parse } from "url"
-import WebSocket from "ws"
+import WebSocket, { WebSocketServer } from "ws"
 import { Channel, equalBinary, Logger, uname } from "zeed"
 import { emit, on, onInit, register, requireModules } from "zerva"
 import { pingMessage, pongMessage, webSocketPath } from "./types"
@@ -69,6 +69,7 @@ export class WebsocketNodeConnection extends Channel {
     ws.on("error", (error) => {
       log.error("onerror", error)
       this.isConnected = false
+      this.emit("close")
       emit("webSocketDisconnect", {
         channel: this,
         error,
@@ -82,6 +83,7 @@ export class WebsocketNodeConnection extends Channel {
         this.interval = undefined
       }
       this.isConnected = false
+      this.emit("close")
       emit("webSocketDisconnect", {
         channel: this,
       })
@@ -122,7 +124,7 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
     // https://github.com/websockets/ws
     // https://cheatcode.co/tutorials/how-to-set-up-a-websocket-server-with-node-js-and-express
 
-    const wss = new WebSocket.Server({
+    const wss = new WebSocketServer({
       noServer: true,
       path: webSocketPath,
     })
@@ -135,15 +137,15 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
 
     http.on("upgrade", (request: any, socket: any, head: Buffer) => {
       const { pathname } = parse(request.url)
-      log("onupgrade")
       if (pathname === webSocketPath) {
+        log("onupgrade")
         wss.handleUpgrade(request, socket, head, (ws: any) => {
           log("upgrade connection")
           wss.emit("connection", ws, request)
         })
-      } else {
-        log("ignore upgrade")
-        // socket.destroy()
+        // } else {
+        //   log("ignore upgrade") // this can be vite HMR e.g.
+        //   // socket.destroy()
       }
     })
   })
