@@ -1,4 +1,11 @@
-import { Channel, equalBinary, getTimestamp, isBrowser, Logger } from "zeed"
+import {
+  Channel,
+  equalBinary,
+  getTimestamp,
+  isBrowser,
+  Logger,
+  Disposable,
+} from "zeed"
 import {
   getWebsocketUrlFromLocation,
   pingMessage,
@@ -21,7 +28,7 @@ export interface WebSocketConnectionOptions {
   messageReconnectTimeout?: number
 }
 
-export class WebSocketConnection extends Channel {
+export class WebSocketConnection extends Channel implements Disposable {
   // implements Disposable
   public ws?: WebSocket
   public url: string | URL
