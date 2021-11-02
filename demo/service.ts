@@ -4,6 +4,7 @@ import { on, serve, useHttp } from "zerva"
 import { useVite } from "zerva-vite"
 import { useWebSocket } from "zerva-websocket"
 import { Messages } from "./src/protocol"
+
 const log = Logger("service")
 
 useHttp({ port: 8080 })
