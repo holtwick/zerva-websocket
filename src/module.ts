@@ -9,7 +9,13 @@ import { pingMessage, pongMessage, webSocketPath } from "./types"
 const moduleName = "websocket"
 const log = Logger(moduleName)
 
+const wsReadyStateConnecting = 0
+const wsReadyStateOpen = 1
+const wsReadyStateClosing = 2 // eslint-disable-line
+const wsReadyStateClosed = 3 // eslint-disable-line
+
 interface ZWebSocketConfig {
+  path?: string
   pingInterval?: number
 }
 
@@ -55,7 +61,7 @@ export class WebsocketNodeConnection extends Channel {
         log("onmessage", typeof data) // , new Uint8Array(data), isBinary)
         if (equalBinary(data, pingMessage)) {
           log("-> ping -> pong")
-          ws.send(pongMessage)
+          this.postMessage(pongMessage)
         } else {
           this.emit("message", {
             data,
@@ -93,7 +99,20 @@ export class WebsocketNodeConnection extends Channel {
   }
 
   postMessage(data: any): void {
-    this.ws.send(data)
+    if (
+      this.ws.readyState != null &&
+      this.ws.readyState !== wsReadyStateConnecting &&
+      this.ws.readyState !== wsReadyStateOpen
+    ) {
+      this.ws.close()
+    }
+    try {
+      this.ws.send(data, (err) => {
+        if (err != null) this.ws.close()
+      })
+    } catch (e) {
+      this.ws.close()
+    }
   }
 
   close() {
@@ -119,14 +138,17 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
   })
 
   on("httpInit", ({ http }) => {
-    log("init")
+    let path = config.path ?? webSocketPath
+    if (!path.startsWith("/")) path = `/${path}`
+
+    log(`init path=${path}`)
 
     // https://github.com/websockets/ws
     // https://cheatcode.co/tutorials/how-to-set-up-a-websocket-server-with-node-js-and-express
 
     const wss = new WebSocketServer({
       noServer: true,
-      path: webSocketPath,
+      path,
     })
 
     wss.on("connection", (ws: any, req: any) => {
@@ -137,7 +159,7 @@ export function useWebSocket(config: ZWebSocketConfig = {}) {
 
     http.on("upgrade", (request: any, socket: any, head: Buffer) => {
       const { pathname } = parse(request.url)
-      if (pathname === webSocketPath) {
+      if (pathname === path) {
         log("onupgrade")
         wss.handleUpgrade(request, socket, head, (ws: any) => {
           log("upgrade connection")

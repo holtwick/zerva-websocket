@@ -16,3 +16,6 @@ declare global {
     webSocketDisconnect(info: { error?: Error; channel: Channel }): void
   }
 }
+
+export const getWebsocketUrlFromLocation = (path: string = webSocketPath) =>
+  `ws${location.protocol.substr(4)}//${location.host}${path}`

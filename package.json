@@ -1,6 +1,6 @@
 {
   "name": "zerva-websocket",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "🌱 Zerva websocket module",
   "funding": {
     "type": "GitHub Sponsors ❤",
@@ -53,8 +53,8 @@
     "@types/node": "^16.11.6",
     "@types/ws": "^8.2.0",
     "ws": "^8.2.3",
-    "zeed": "^0.7.55",
-    "zerva": "^0.4.53"
+    "zeed": "^0.7.60",
+    "zerva": "^0.4.55"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",
