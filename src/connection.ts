@@ -1,6 +1,10 @@
 import { Channel, equalBinary, getTimestamp, isBrowser, Logger } from "zeed"
-import { pingMessage, pongMessage } from "./types"
-import { getWebsocketUrlFromLocation } from "./url"
+import {
+  getWebsocketUrlFromLocation,
+  pingMessage,
+  pongMessage,
+  webSocketPath,
+} from "./types"
 
 const log = Logger("connection")
 
@@ -11,6 +15,7 @@ const default_maxReconnectTimeout = 2500
 const default_messageReconnectTimeout = 30000
 
 export interface WebSocketConnectionOptions {
+  path?: string
   reconnectTimeoutBase?: number
   maxReconnectTimeout?: number
   messageReconnectTimeout?: number
@@ -32,8 +37,12 @@ export class WebSocketConnection extends Channel {
 
   constructor(url?: string, opt: WebSocketConnectionOptions = {}) {
     super()
+
+    let path = opt.path ?? webSocketPath
+    if (!path.startsWith("/")) path = `/${path}`
+
     this.opt = opt
-    this.url = url ?? getWebsocketUrlFromLocation()
+    this.url = url ?? getWebsocketUrlFromLocation(path)
 
     if (isBrowser()) {
       window.addEventListener("beforeunload", () => this.disconnect())

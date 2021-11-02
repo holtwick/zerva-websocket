@@ -1,5 +1,5 @@
 import { Channel, Logger } from "zeed"
-import { getWebsocketUrlFromLocation } from "./url"
+import { getWebsocketUrlFromLocation } from "./types"
 
 const log = Logger("channel")
 
