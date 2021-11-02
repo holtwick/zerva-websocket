@@ -13,7 +13,7 @@ import {
   webSocketPath,
 } from "./types"
 
-const log = Logger("connection")
+const log = Logger("websocket")
 
 // See lib0 and y-websocket for initial implementation
 
@@ -22,6 +22,7 @@ const default_maxReconnectTimeout = 2500
 const default_messageReconnectTimeout = 30000
 
 export interface WebSocketConnectionOptions {
+  debug?: boolean
   path?: string
   reconnectTimeoutBase?: number
   maxReconnectTimeout?: number
@@ -29,7 +30,6 @@ export interface WebSocketConnectionOptions {
 }
 
 export class WebSocketConnection extends Channel implements Disposable {
-  // implements Disposable
   public ws?: WebSocket
   public url: string | URL
   public shouldConnect: boolean = true
@@ -41,6 +41,7 @@ export class WebSocketConnection extends Channel implements Disposable {
   private opt: WebSocketConnectionOptions
   private reconnectTimout: any
   private pingTimeout: any
+  private debug: boolean
 
   constructor(url?: string, opt: WebSocketConnectionOptions = {}) {
     super()
@@ -49,6 +50,7 @@ export class WebSocketConnection extends Channel implements Disposable {
     if (!path.startsWith("/")) path = `/${path}`
 
     this.opt = opt
+    this.debug = opt.debug ?? false
     this.url = url ?? getWebsocketUrlFromLocation(path)
 
     if (isBrowser()) {
@@ -61,7 +63,7 @@ export class WebSocketConnection extends Channel implements Disposable {
   }
 
   postMessage(data: any): void {
-    // log("postMessage", data)
+    // if (this.debug) log("postMessage", data)
     if (this.ws) {
       this.ws.send(data)
     } else {
@@ -124,14 +126,17 @@ export class WebSocketConnection extends Channel implements Disposable {
       })
 
       const onclose = (error?: any) => {
-        log("onclose", error)
         clearTimeout(this.pingTimeout)
 
         if (this.ws != null) {
+          if (error) log.warn("onclose with error=", error)
+          else log("onclose")
+
           this.ws = undefined
           // this.isConnecting = false
           if (this.isConnected) {
             this.isConnected = false
+            this.emit("disconnect")
           } else {
             this.unsuccessfulReconnects++
           }

@@ -1,6 +1,7 @@
 <template>
   <div>
     <h1>zerva-websocket demo</h1>
+    <pre>connected = {{ connected }}</pre>
     <pre>directFeedback = {{ directFeedback }}</pre>
     <pre>pushedFeedback = {{ pushedFeedback }}</pre>
   </div>
@@ -15,6 +16,7 @@ import { Messages } from "./protocol"
 const log = Logger("app")
 log("app")
 
+let connected = ref(false)
 let directFeedback = ref({})
 let pushedFeedback = ref({})
 
@@ -28,8 +30,19 @@ if (true) {
     log("message", JSON.parse(msg.data))
   })
 
+  channel.on("disconnect", () => {
+    log("channel disconnect")
+    connected.value = false
+  })
+
+  channel.on("close", () => {
+    log("channel close")
+    connected.value = false
+  })
+
   channel.on("connect", () => {
     log("channel connect")
+    connected.value = true
 
     counter++
     channel.postMessage(
