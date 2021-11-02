@@ -1,7 +1,7 @@
 import { Channel, Logger } from "zeed"
 import { getWebsocketUrlFromLocation } from "./url"
 
-const log = Logger("websocket")
+const log = Logger("channel")
 
 export class WebsocketChannel extends Channel {
   private ws: WebSocket

@@ -2,7 +2,7 @@ import { Channel, equalBinary, getTimestamp, isBrowser, Logger } from "zeed"
 import { pingMessage, pongMessage } from "./types"
 import { getWebsocketUrlFromLocation } from "./url"
 
-const log = Logger("websocket")
+const log = Logger("connection")
 
 // See lib0 and y-websocket for initial implementation
 
