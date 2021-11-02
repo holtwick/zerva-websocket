@@ -1,6 +1,6 @@
 {
   "name": "zerva-websocket-demo",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "engines": {
     "node": ">=14.13.1"
@@ -14,8 +14,8 @@
   "dependencies": {
     "cross-fetch": "^3.1.4",
     "vue": "^3.2.20",
-    "zeed": "^0.7.55",
-    "zerva": "^0.4.53",
+    "zeed": "^0.7.56",
+    "zerva": "^0.4.55",
     "zerva-vite": "^0.2.4",
     "zerva-vite-plugin": "^0.4.5",
     "zerva-websocket": "file:.."
@@ -24,7 +24,7 @@
     "@types/jest": "^27.0.2",
     "@types/node": "^16.11.6",
     "@vitejs/plugin-vue": "^1.9.4",
-    "@vue/compiler-sfc": "^3.2.20",
+    "@vue/compiler-sfc": "^3.2.21",
     "jest": "^27.3.1",
     "jest-ts-webcompat-resolver": "^1.0.0",
     "ts-jest": "^27.0.7",
