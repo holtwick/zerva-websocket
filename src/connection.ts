@@ -1,16 +1,18 @@
 import {
   Channel,
+  Disposable,
   equalBinary,
   getTimestamp,
   isBrowser,
   Logger,
-  Disposable,
 } from "zeed"
 import {
   getWebsocketUrlFromLocation,
   pingMessage,
   pongMessage,
   webSocketPath,
+  wsReadyStateConnecting,
+  wsReadyStateOpen,
 } from "./types"
 
 const log = Logger("websocket")
@@ -22,6 +24,7 @@ const default_maxReconnectTimeout = 2500
 const default_messageReconnectTimeout = 30000
 
 export interface WebSocketConnectionOptions {
+  // buffer?: boolean
   debug?: boolean
   path?: string
   reconnectTimeoutBase?: number
@@ -55,6 +58,7 @@ export class WebSocketConnection extends Channel implements Disposable {
 
     if (isBrowser()) {
       window.addEventListener("beforeunload", () => this.disconnect())
+      window.addEventListener("focus", () => this.ping())
     } else if (typeof process !== "undefined") {
       process.on("exit", () => this.disconnect())
     }
@@ -63,12 +67,30 @@ export class WebSocketConnection extends Channel implements Disposable {
   }
 
   postMessage(data: any): void {
-    // if (this.debug) log("postMessage", data)
-    if (this.ws) {
-      this.ws.send(data)
+    if (
+      this.ws &&
+      (this.ws.readyState != null
+        ? this.ws.readyState === wsReadyStateConnecting ||
+          this.ws.readyState === wsReadyStateOpen
+        : true)
+    ) {
+      try {
+        this.ws.send(data)
+        return
+      } catch (e) {
+        log.warn(`send failed with error=${String(e)}`)
+      }
     } else {
-      throw new Error("Not connected!")
+      log.warn(`connection state issue, readyState=${this.ws?.readyState}`)
     }
+    this.ws?.close()
+    this._connect()
+  }
+
+  // Send a ping. If it fails, try to reconnect immediately
+  ping() {
+    log("ping ->")
+    this.postMessage(pingMessage)
   }
 
   disconnect() {
@@ -104,7 +126,6 @@ export class WebSocketConnection extends Channel implements Disposable {
       this.ws = websocket
       this.ws.binaryType = "arraybuffer"
 
-      // this.isConnecting = true
       this.isConnected = false
 
       websocket.addEventListener("message", (event: any) => {
@@ -118,7 +139,10 @@ export class WebSocketConnection extends Channel implements Disposable {
           log("-> pong")
           this.pingCount++
           if (messageReconnectTimeout > 0) {
-            this.pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
+            this.pingTimeout = setTimeout(
+              () => this.ping(),
+              messageReconnectTimeout / 2
+            )
           }
         } else {
           this.emit("message", { data })
@@ -129,11 +153,10 @@ export class WebSocketConnection extends Channel implements Disposable {
         clearTimeout(this.pingTimeout)
 
         if (this.ws != null) {
-          if (error) log.warn("onclose with error=", error)
+          if (error) log.warn(`onclose with error=${String(error)}`)
           else log("onclose")
 
           this.ws = undefined
-          // this.isConnecting = false
           if (this.isConnected) {
             this.isConnected = false
             this.emit("disconnect")
@@ -145,21 +168,15 @@ export class WebSocketConnection extends Channel implements Disposable {
           // log10(wsUnsuccessfulReconnects).
           // The idea is to increase reconnect timeout slowly and have no reconnect
           // timeout at the beginning (log(1) = 0)
+          const reconnectDelay = Math.min(
+            Math.log10(this.unsuccessfulReconnects + 1) * reconnectTimeoutBase,
+            maxReconnectTimeout
+          )
           this.reconnectTimout = setTimeout(
             () => this._connect(),
-            Math.min(
-              Math.log10(this.unsuccessfulReconnects + 1) *
-                reconnectTimeoutBase,
-              maxReconnectTimeout
-            )
+            reconnectDelay
           )
-        }
-      }
-
-      const sendPing = () => {
-        if (this.ws === websocket) {
-          log("ping ->")
-          websocket.send(pingMessage)
+          log(`reconnect retry in ${reconnectDelay}ms`)
         }
       }
 
@@ -171,7 +188,11 @@ export class WebSocketConnection extends Channel implements Disposable {
         this.isConnected = true
         this.unsuccessfulReconnects = 0
         if (messageReconnectTimeout > 0) {
-          this.pingTimeout = setTimeout(sendPing, messageReconnectTimeout / 2)
+          log(`schedule next ping in ${messageReconnectTimeout / 2}ms`)
+          this.pingTimeout = setTimeout(
+            () => this.ping(),
+            messageReconnectTimeout / 2
+          )
         }
         this.emit("connect")
       })

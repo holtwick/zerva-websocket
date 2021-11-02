@@ -43,7 +43,7 @@ if (true) {
   channel.on("connect", () => {
     log("channel connect")
     connected.value = true
-
+    return
     counter++
     channel.postMessage(
       JSON.stringify({
@@ -53,15 +53,15 @@ if (true) {
     )
   })
 
-  setInterval(() => {
-    counter++
-    channel.postMessage(
-      JSON.stringify({
-        from: "clientPing",
-        counter,
-      })
-    )
-  }, 5000)
+  // setInterval(() => {
+  //   counter++
+  //   channel.postMessage(
+  //     JSON.stringify({
+  //       from: "clientPing",
+  //       counter,
+  //     })
+  //   )
+  // }, 5000)
 } else {
   // conn.on("serverPong", (data) => log("serverPong", data))
 

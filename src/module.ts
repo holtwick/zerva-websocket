@@ -4,15 +4,16 @@ import { parse } from "url"
 import WebSocket, { WebSocketServer } from "ws"
 import { Channel, equalBinary, Logger, uname, Disposable } from "zeed"
 import { emit, on, onInit, register, requireModules } from "zerva"
-import { pingMessage, pongMessage, webSocketPath } from "./types"
+import {
+  pingMessage,
+  pongMessage,
+  webSocketPath,
+  wsReadyStateConnecting,
+  wsReadyStateOpen,
+} from "./types"
 
 const moduleName = "websocket"
 const log = Logger(moduleName)
-
-const wsReadyStateConnecting = 0
-const wsReadyStateOpen = 1
-const wsReadyStateClosing = 2 // eslint-disable-line
-const wsReadyStateClosed = 3 // eslint-disable-line
 
 interface ZWebSocketConfig {
   path?: string
