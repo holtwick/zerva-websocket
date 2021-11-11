@@ -87,3 +87,11 @@ Both the client and the server try to stay connected and send ping/pong (heart b
 ### Encoding
 
 Communication uses binary data. Encoding is usually provided by Message, PubSub and others using JSON. You can plug in any other encoding, e.g. crypto or compression.
+
+## Alternatives
+
+Similar projects:
+
+- [Socket.io](https://socket.io/)
+- [SocketCluster](https://socketcluster.io/)
+- [SockJS](https://github.com/sockjs/sockjs-client)
