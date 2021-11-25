@@ -1,6 +1,6 @@
 {
   "name": "zerva-websocket",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "🌱 Zerva websocket module",
   "funding": {
     "type": "GitHub Sponsors ❤",
@@ -50,18 +50,18 @@
     "test": "jest src --detectOpenHandles"
   },
   "dependencies": {
-    "@types/node": "^16.11.7",
+    "@types/node": "^16.11.10",
     "@types/ws": "^8.2.0",
-    "ws": "^8.2.3",
-    "zeed": "^0.7.71",
-    "zerva": "^0.4.60"
+    "ws": "^8.3.0",
+    "zeed": "^0.7.76",
+    "zerva": "^0.4.63"
   },
   "devDependencies": {
-    "@types/jest": "^27.0.2",
+    "@types/jest": "^27.0.3",
     "jest": "^27.3.1",
     "jest-ts-webcompat-resolver": "^1.0.0",
     "ts-jest": "^27.0.7",
-    "tsup": "^5.7.0",
-    "typescript": "^4.4.4"
+    "tsup": "^5.10.0",
+    "typescript": "^4.5.2"
   }
 }
