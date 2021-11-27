@@ -53,8 +53,8 @@
     "@types/node": "^16.11.10",
     "@types/ws": "^8.2.0",
     "ws": "^8.3.0",
-    "zeed": "^0.7.76",
-    "zerva": "^0.4.63"
+    "zeed": "^0.7.80",
+    "zerva": "^0.5.1"
   },
   "devDependencies": {
     "@types/jest": "^27.0.3",

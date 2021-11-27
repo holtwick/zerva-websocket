@@ -36,9 +36,9 @@ const log = Logger("test:module")
 const port = 8888
 const url = `ws://localhost:${port}${webSocketPath}`
 
-interface WebsocketActions {
-  echo(value: any): any
-  throwsError(): void
+type WebsocketActions = {
+  echo(value: any): Promise<any>
+  throwsError(): Promise<void>
 }
 
 describe("module", () => {
