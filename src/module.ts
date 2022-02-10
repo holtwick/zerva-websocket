@@ -2,7 +2,7 @@
 
 import { parse } from "url"
 import WebSocket, { WebSocketServer } from "ws"
-import { Channel, equalBinary, Logger, uname, Disposable } from "zeed"
+import { Channel, Disposable, equalBinary, Logger, uname } from "zeed"
 import { emit, on, onInit, register, requireModules } from "zerva"
 import {
   pingMessage,
